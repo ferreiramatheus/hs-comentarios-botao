@@ -27,12 +27,17 @@ final class HS_Comentarios_Botao_V2 {
 		add_action('wp_ajax_hs_carregar_comentarios', [$this, 'ajax_carregar_comentarios']);
 		add_action('wp_ajax_nopriv_hs_carregar_comentarios', [$this, 'ajax_carregar_comentarios']);
 
+		add_action('comment_form_after_fields', [$this, 'render_turnstile_field']);
+		add_action('comment_form_logged_in_after', [$this, 'render_turnstile_field']);
+		add_filter('preprocess_comment', [$this, 'validar_turnstile_no_comentario']);
+
 		add_filter('query_vars', [$this, 'registrar_query_vars']);
 		add_action('template_redirect', [$this, 'rota_pagina_comentarios']);
 	}
 
 	public function registrar_assets() {
 		$base_url = plugin_dir_url(__FILE__);
+		$site_key = $this->get_turnstile_site_key();
 
 		wp_register_style(
 			'hs-comentarios-botao',
@@ -45,7 +50,15 @@ final class HS_Comentarios_Botao_V2 {
 			'hs-comentarios-botao',
 			$base_url . 'assets/hs-comentarios-botao.js',
 			[],
-			'2.1.0',
+			'2.2.0',
+			true
+		);
+
+		wp_register_script(
+			'hs-comentarios-turnstile',
+			'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit',
+			[],
+			null,
 			true
 		);
 
@@ -59,6 +72,9 @@ final class HS_Comentarios_Botao_V2 {
 			'carregando'      => __('Carregando comentários...', 'hs-comentarios-botao'),
 			'enviando'        => __('Enviando comentário...', 'hs-comentarios-botao'),
 			'erroEnvio'       => __('Não foi possível enviar o comentário. Verifique os campos e tente novamente.', 'hs-comentarios-botao'),
+			'turnstileSiteKey'=> $site_key,
+			'turnstileAtivo'  => !empty($site_key),
+			'turnstileObrigatorio' => __('Confirme o captcha antes de enviar o comentário.', 'hs-comentarios-botao'),
 		]);
 	}
 
@@ -156,6 +172,9 @@ final class HS_Comentarios_Botao_V2 {
 		$this->shortcode_usado = true;
 		wp_enqueue_style('hs-comentarios-botao');
 		wp_enqueue_script('hs-comentarios-botao');
+		if (!empty($this->get_turnstile_site_key())) {
+			wp_enqueue_script('hs-comentarios-turnstile');
+		}
 
 		ob_start();
 		?>
@@ -305,6 +324,11 @@ final class HS_Comentarios_Botao_V2 {
 		$current_url_raw = home_url($request_uri);
 		$current_comments_page_url = wp_validate_redirect($current_url_raw, home_url('/'));
 		$cpage = isset($_GET['cpage']) ? max(1, absint($_GET['cpage'])) : 1;
+
+		wp_enqueue_script('hs-comentarios-botao');
+		if (!empty($this->get_turnstile_site_key())) {
+			wp_enqueue_script('hs-comentarios-turnstile');
+		}
 
 		?>
 		<!DOCTYPE html>
@@ -477,6 +501,110 @@ final class HS_Comentarios_Botao_V2 {
 		}
 
 		return '';
+	}
+
+	private function get_turnstile_site_key() {
+		$site_key = defined('HS_COMENTARIOS_TURNSTILE_SITE_KEY') ? HS_COMENTARIOS_TURNSTILE_SITE_KEY : '';
+		if (empty($site_key)) {
+			$site_key = getenv('HS_COMENTARIOS_TURNSTILE_SITE_KEY');
+		}
+
+		/**
+		 * Permite sobrescrever a site key do Turnstile.
+		 */
+		$site_key = apply_filters('hs_comentarios_turnstile_site_key', $site_key);
+
+		return is_string($site_key) ? trim($site_key) : '';
+	}
+
+	private function get_turnstile_secret_key() {
+		$secret_key = defined('HS_COMENTARIOS_TURNSTILE_SECRET_KEY') ? HS_COMENTARIOS_TURNSTILE_SECRET_KEY : '';
+		if (empty($secret_key)) {
+			$secret_key = getenv('HS_COMENTARIOS_TURNSTILE_SECRET_KEY');
+		}
+
+		/**
+		 * Permite sobrescrever a secret key do Turnstile.
+		 */
+		$secret_key = apply_filters('hs_comentarios_turnstile_secret_key', $secret_key);
+
+		return is_string($secret_key) ? trim($secret_key) : '';
+	}
+
+	public function render_turnstile_field() {
+		$site_key = $this->get_turnstile_site_key();
+		if (empty($site_key)) {
+			return;
+		}
+
+		echo '<input type="hidden" name="hs_turnstile_enabled" value="1" />';
+		echo '<input type="hidden" name="hs_turnstile_token" value="" />';
+		echo '<div class="hs-turnstile-widget" data-sitekey="' . esc_attr($site_key) . '"></div>';
+	}
+
+	public function validar_turnstile_no_comentario($commentdata) {
+		$turnstile_ativo = isset($_POST['hs_turnstile_enabled']) && '1' === (string) wp_unslash($_POST['hs_turnstile_enabled']);
+		if (!$turnstile_ativo) {
+			return $commentdata;
+		}
+
+		$site_key = $this->get_turnstile_site_key();
+		$secret_key = $this->get_turnstile_secret_key();
+		if (empty($site_key) || empty($secret_key)) {
+			wp_die(
+				esc_html__('O captcha de comentários não está configurado.', 'hs-comentarios-botao'),
+				esc_html__('Erro de validação', 'hs-comentarios-botao'),
+				['response' => 400]
+			);
+		}
+
+		$token = '';
+		if (isset($_POST['hs_turnstile_token'])) {
+			$token = sanitize_text_field((string) wp_unslash($_POST['hs_turnstile_token']));
+		}
+
+		if (empty($token) && isset($_POST['cf-turnstile-response'])) {
+			$token = sanitize_text_field((string) wp_unslash($_POST['cf-turnstile-response']));
+		}
+
+		if (empty($token)) {
+			wp_die(
+				esc_html__('Confirme o captcha para enviar seu comentário.', 'hs-comentarios-botao'),
+				esc_html__('Captcha obrigatório', 'hs-comentarios-botao'),
+				['response' => 400]
+			);
+		}
+
+		$remote_ip = isset($_SERVER['REMOTE_ADDR']) ? sanitize_text_field((string) wp_unslash($_SERVER['REMOTE_ADDR'])) : '';
+		$verify_response = wp_remote_post('https://challenges.cloudflare.com/turnstile/v0/siteverify', [
+			'timeout' => 10,
+			'body'    => [
+				'secret'   => $secret_key,
+				'response' => $token,
+				'remoteip' => $remote_ip,
+			],
+		]);
+
+		if (is_wp_error($verify_response)) {
+			wp_die(
+				esc_html__('Não foi possível validar o captcha agora. Tente novamente.', 'hs-comentarios-botao'),
+				esc_html__('Erro de validação', 'hs-comentarios-botao'),
+				['response' => 400]
+			);
+		}
+
+		$body = json_decode(wp_remote_retrieve_body($verify_response), true);
+		$success = is_array($body) && !empty($body['success']);
+
+		if (!$success) {
+			wp_die(
+				esc_html__('Captcha inválido ou expirado. Atualize a página e tente novamente.', 'hs-comentarios-botao'),
+				esc_html__('Captcha inválido', 'hs-comentarios-botao'),
+				['response' => 400]
+			);
+		}
+
+		return $commentdata;
 	}
 }
 
