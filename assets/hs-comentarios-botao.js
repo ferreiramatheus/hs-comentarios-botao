@@ -7,6 +7,10 @@
 		var modal = document.getElementById('hs-comentarios-modal');
 		if (!modal) return;
 
+		if (modal.parentElement !== document.body) {
+			document.body.appendChild(modal);
+		}
+
 		modal.hidden = false;
 		document.body.classList.add('hs-comentarios-modal-open');
 	}
