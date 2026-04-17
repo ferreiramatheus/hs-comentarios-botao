@@ -1,0 +1,67 @@
+.hs-comentarios-botao-wrap {
+	margin-top: 24px;
+	margin-bottom: 24px;
+}
+
+.hs-comentarios-botao {
+	cursor: pointer;
+}
+
+/* Modal: só estrutura mínima */
+.hs-comentarios-modal[hidden] {
+	display: none !important;
+}
+
+.hs-comentarios-modal {
+	position: fixed;
+	inset: 0;
+	z-index: 999999;
+}
+
+.hs-comentarios-modal__overlay {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+}
+
+.hs-comentarios-modal__dialog {
+	position: relative;
+	z-index: 2;
+	width: min(900px, calc(100vw - 32px));
+	max-height: calc(100vh - 40px);
+	margin: 20px auto;
+	overflow: auto;
+}
+
+.hs-comentarios-modal__body {
+	position: relative;
+}
+
+.hs-comentarios-modal__close {
+	position: absolute;
+	top: 0;
+	right: 0;
+	border: 0;
+	background: transparent;
+	font-size: 32px;
+	line-height: 1;
+	cursor: pointer;
+	padding: 0;
+}
+
+.hs-comentarios-modal__title {
+	margin-top: 0;
+	padding-right: 36px;
+}
+
+body.hs-comentarios-modal-open {
+	overflow: hidden;
+}
+
+@media (max-width: 768px) {
+	.hs-comentarios-modal__dialog {
+		width: calc(100vw - 16px);
+		max-height: calc(100vh - 16px);
+		margin: 8px auto;
+	}
+}
