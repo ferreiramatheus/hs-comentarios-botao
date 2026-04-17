@@ -28,6 +28,7 @@ final class HS_Comentarios_Botao_V2 {
 		add_action('wp_ajax_nopriv_hs_carregar_comentarios', [$this, 'ajax_carregar_comentarios']);
 
 		add_filter('query_vars', [$this, 'registrar_query_vars']);
+		add_filter('comment_post_redirect', [$this, 'forcar_redirect_pagina_comentarios'], 10, 2);
 		add_action('template_redirect', [$this, 'rota_pagina_comentarios']);
 	}
 
@@ -298,9 +299,31 @@ final class HS_Comentarios_Botao_V2 {
 		exit;
 	}
 
+	public function forcar_redirect_pagina_comentarios($location, $comment) {
+		if (empty($_POST['hs_comentarios_page_url'])) {
+			return $location;
+		}
+
+		$redirect_url = esc_url_raw(wp_unslash($_POST['hs_comentarios_page_url']));
+
+		if (empty($redirect_url)) {
+			return $location;
+		}
+
+		$home_host = wp_parse_url(home_url('/'), PHP_URL_HOST);
+		$redirect_host = wp_parse_url($redirect_url, PHP_URL_HOST);
+
+		if ($home_host && $redirect_host && $home_host !== $redirect_host) {
+			return $location;
+		}
+
+		return $redirect_url;
+	}
+
 	private function render_comments_page($post_obj) {
 		$title = 'Comentários - ' . get_the_title($post_obj);
 		$post_url = get_permalink($post_obj->ID);
+		$current_comments_page_url = $this->get_comments_page_url($post_obj->ID);
 
 		?>
 		<!DOCTYPE html>
@@ -378,6 +401,7 @@ final class HS_Comentarios_Botao_V2 {
 							'title_reply'        => __('Deixe um comentário', 'hs-comentarios-botao'),
 							'title_reply_before' => '<h2 id="reply-title" class="comment-reply-title">',
 							'title_reply_after'  => '</h2>',
+							'submit_field'       => '<input type="hidden" name="hs_comentarios_page_url" value="' . esc_attr($current_comments_page_url) . '" />%1$s %2$s',
 						], $post_obj->ID);
 					}
 
