@@ -27,8 +27,7 @@ final class HS_Comentarios_Botao_V2 {
 		add_action('wp_ajax_hs_carregar_comentarios', [$this, 'ajax_carregar_comentarios']);
 		add_action('wp_ajax_nopriv_hs_carregar_comentarios', [$this, 'ajax_carregar_comentarios']);
 
-		add_action('comment_form_after_fields', [$this, 'render_turnstile_field']);
-		add_action('comment_form_logged_in_after', [$this, 'render_turnstile_field']);
+		add_filter('comment_form_submit_field', [$this, 'inject_turnstile_before_submit'], 10, 2);
 		add_filter('preprocess_comment', [$this, 'validar_turnstile_no_comentario']);
 
 		add_filter('query_vars', [$this, 'registrar_query_vars']);
@@ -546,6 +545,21 @@ final class HS_Comentarios_Botao_V2 {
 		echo '<input type="hidden" name="hs_turnstile_enabled" value="1" />';
 		echo '<input type="hidden" name="hs_turnstile_token" value="" />';
 		echo '<div class="hs-turnstile-widget" data-sitekey="' . esc_attr($site_key) . '"></div>';
+	}
+
+	public function inject_turnstile_before_submit($submit_field, $args) {
+		$site_key = $this->get_turnstile_site_key();
+		if (empty($site_key)) {
+			return $submit_field;
+		}
+
+		ob_start();
+		echo '<div class="hs-turnstile-field-wrap">';
+		$this->render_turnstile_field();
+		echo '</div>';
+		$turnstile_html = ob_get_clean();
+
+		return $turnstile_html . $submit_field;
 	}
 
 	public function validar_turnstile_no_comentario($commentdata) {
