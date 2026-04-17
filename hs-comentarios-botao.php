@@ -153,9 +153,9 @@ final class HS_Comentarios_Botao_V2 {
 		ob_start();
 		?>
 		<div class="hs-comentarios-botao-wrap" style="<?php echo esc_attr($style_wrap); ?>">
-			<a
+			<button
+				type="button"
 				class="<?php echo esc_attr(implode(' ', $classes)); ?>"
-				href="<?php echo esc_url($comments_url); ?>"
 				style="<?php echo esc_attr($style_btn); ?>"
 				aria-label="<?php echo esc_attr($label); ?>"
 				data-post-id="<?php echo esc_attr($post->ID); ?>"
@@ -163,7 +163,7 @@ final class HS_Comentarios_Botao_V2 {
 				data-comments-url="<?php echo esc_url($comments_url); ?>"
 			>
 				<?php echo esc_html($label); ?>
-			</a>
+			</button>
 		</div>
 		<?php
 		return ob_get_clean();

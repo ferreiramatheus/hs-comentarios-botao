@@ -112,6 +112,7 @@
 		if (!postId || !commentsUrl) return;
 
 		if (modo === 'page') {
+			window.location.href = commentsUrl;
 			return;
 		}
 
@@ -123,6 +124,7 @@
 
 		if (modo === 'modal_desktop_page_mobile') {
 			if (isMobile(parseInt(hsComentariosBotao.mobileBreakpoint, 10))) {
+				window.location.href = commentsUrl;
 				return;
 			}
 
