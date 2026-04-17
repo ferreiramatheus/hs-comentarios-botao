@@ -45,12 +45,13 @@ final class HS_Comentarios_Botao_V2 {
 			'hs-comentarios-botao',
 			$base_url . 'assets/hs-comentarios-botao.js',
 			[],
-			'2.0.1',
+			'2.1.0',
 			true
 		);
 
 		wp_localize_script('hs-comentarios-botao', 'hsComentariosBotao', [
 			'ajaxUrl'         => admin_url('admin-ajax.php'),
+			'nonceCarregar'   => wp_create_nonce('hs_carregar_comentarios'),
 			'modoPadrao'      => 'modal_desktop_page_mobile',
 			'mobileBreakpoint'=> 768,
 			'fecharLabel'     => __('Fechar comentários', 'hs-comentarios-botao'),
@@ -136,13 +137,19 @@ final class HS_Comentarios_Botao_V2 {
 		$style_wrap = 'text-align:' . esc_attr($alinhar) . ';';
 		$inline_styles = [];
 
-			if (!empty($atts['cor_fundo'])) {
-				$inline_styles[] = 'background:' . esc_attr($atts['cor_fundo']);
+		if (!empty($atts['cor_fundo'])) {
+			$cor_fundo = $this->sanitize_color_value($atts['cor_fundo']);
+			if ($cor_fundo) {
+				$inline_styles[] = 'background:' . $cor_fundo;
 			}
+		}
 
-			if (!empty($atts['cor_texto'])) {
-				$inline_styles[] = 'color:' . esc_attr($atts['cor_texto']);
+		if (!empty($atts['cor_texto'])) {
+			$cor_texto = $this->sanitize_color_value($atts['cor_texto']);
+			if ($cor_texto) {
+				$inline_styles[] = 'color:' . $cor_texto;
 			}
+		}
 
 			$style_btn = !empty($inline_styles) ? implode(';', $inline_styles) . ';' : '';
 
@@ -216,7 +223,13 @@ final class HS_Comentarios_Botao_V2 {
 	}
 
 	public function ajax_carregar_comentarios() {
+		$nonce_ok = check_ajax_referer('hs_carregar_comentarios', 'nonce', false);
+		if (!$nonce_ok) {
+			wp_send_json_error(['message' => 'Requisição inválida.'], 403);
+		}
+
 		$post_id = isset($_GET['post_id']) ? absint($_GET['post_id']) : 0;
+		$cpage = isset($_GET['cpage']) ? max(1, absint($_GET['cpage'])) : 1;
 
 		if (!$post_id) {
 			wp_send_json_error(['message' => 'Post inválido.'], 400);
@@ -240,20 +253,7 @@ final class HS_Comentarios_Botao_V2 {
 
 		echo '<div class="hs-comentarios-ajax-inner">';
 
-		$comments = get_comments([
-			'post_id' => $post_id,
-			'status'  => 'approve',
-		]);
-
-		if (!empty($comments)) {
-			echo '<div class="hs-comentarios-lista">';
-			wp_list_comments([
-				'style'       => 'ol',
-				'short_ping'  => true,
-				'avatar_size' => 48,
-			], $comments);
-			echo '</div>';
-		}
+		echo $this->get_comments_list_html($post_id, $cpage, true);
 
 		if (comments_open($post_id)) {
 			comment_form([
@@ -302,7 +302,9 @@ final class HS_Comentarios_Botao_V2 {
 		$title = 'Comentários - ' . get_the_title($post_obj);
 		$post_url = get_permalink($post_obj->ID);
 		$request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';
-		$current_comments_page_url = home_url($request_uri);
+		$current_url_raw = home_url($request_uri);
+		$current_comments_page_url = wp_validate_redirect($current_url_raw, home_url('/'));
+		$cpage = isset($_GET['cpage']) ? max(1, absint($_GET['cpage'])) : 1;
 
 		?>
 		<!DOCTYPE html>
@@ -358,22 +360,7 @@ final class HS_Comentarios_Botao_V2 {
 					$post = $post_obj;
 					setup_postdata($post);
 
-					$comments = get_comments([
-						'post_id' => $post_obj->ID,
-						'status'  => 'approve',
-					]);
-
-					if (!empty($comments)) {
-						echo '<div class="hs-comentarios-lista">';
-						wp_list_comments([
-							'style'       => 'ol',
-							'short_ping'  => true,
-							'avatar_size' => 48,
-						], $comments);
-						echo '</div>';
-					} else {
-						echo '<p>Ainda não há comentários.</p>';
-					}
+						echo $this->get_comments_list_html($post_obj->ID, $cpage, false);
 
 					if (comments_open($post_obj->ID)) {
 						comment_form([
@@ -393,6 +380,103 @@ final class HS_Comentarios_Botao_V2 {
 		</body>
 		</html>
 		<?php
+	}
+
+	private function get_comments_list_html($post_id, $cpage = 1, $is_ajax = false) {
+		$per_page = (int) get_option('comments_per_page');
+		if ($per_page < 1) {
+			$per_page = 20;
+		}
+
+		$total_comments = get_comments_number($post_id);
+		$total_pages = max(1, (int) ceil($total_comments / $per_page));
+		$cpage = min(max(1, (int) $cpage), $total_pages);
+
+		$post_obj = get_post($post_id);
+		$modified = $post_obj ? strtotime((string) $post_obj->post_modified_gmt) : 0;
+		$cache_key_raw = $post_id . '|' . $cpage . '|' . $per_page . '|' . $total_comments . '|' . $modified;
+		$cache_key = 'hs_cb_comments_' . md5($cache_key_raw);
+
+		$list_html = get_transient($cache_key);
+		if (false === $list_html) {
+			$offset = ($cpage - 1) * $per_page;
+			$comments = get_comments([
+				'post_id' => $post_id,
+				'status'  => 'approve',
+				'number'  => $per_page,
+				'offset'  => $offset,
+				'orderby' => 'comment_date_gmt',
+				'order'   => 'ASC',
+			]);
+
+			ob_start();
+			if (!empty($comments)) {
+				echo '<div class="hs-comentarios-lista">';
+				wp_list_comments([
+					'style'       => 'ol',
+					'short_ping'  => true,
+					'avatar_size' => 48,
+				], $comments);
+				echo '</div>';
+			} else {
+				echo '<p>Ainda não há comentários.</p>';
+			}
+			$list_html = ob_get_clean();
+			set_transient($cache_key, $list_html, MINUTE_IN_SECONDS * 5);
+		}
+
+		ob_start();
+		echo $list_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+
+		if ($total_pages > 1) {
+			echo '<nav class="hs-comentarios-paginacao" aria-label="Paginação dos comentários">';
+			if ($cpage > 1) {
+				$prev_page = $cpage - 1;
+				if ($is_ajax) {
+					echo '<button type="button" class="hs-comentarios-page-link" data-cpage="' . esc_attr($prev_page) . '">← Comentários anteriores</button>';
+				} else {
+					$prev_url = add_query_arg('cpage', $prev_page);
+					echo '<a class="hs-comentarios-page-link" href="' . esc_url($prev_url) . '">← Comentários anteriores</a>';
+				}
+			}
+
+			if ($cpage < $total_pages) {
+				$next_page = $cpage + 1;
+				if ($is_ajax) {
+					echo '<button type="button" class="hs-comentarios-page-link" data-cpage="' . esc_attr($next_page) . '">Próximos comentários →</button>';
+				} else {
+					$next_url = add_query_arg('cpage', $next_page);
+					echo '<a class="hs-comentarios-page-link" href="' . esc_url($next_url) . '">Próximos comentários →</a>';
+				}
+			}
+			echo '</nav>';
+		}
+
+		return ob_get_clean();
+	}
+
+	private function sanitize_color_value($value) {
+		$value = trim((string) $value);
+		if ('' === $value) {
+			return '';
+		}
+
+		$hex = sanitize_hex_color($value);
+		if (!empty($hex)) {
+			return $hex;
+		}
+
+		$is_rgb = preg_match('/^rgba?\(\s*(?:25[0-5]|2[0-4]\d|1?\d?\d)\s*,\s*(?:25[0-5]|2[0-4]\d|1?\d?\d)\s*,\s*(?:25[0-5]|2[0-4]\d|1?\d?\d)(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/', $value);
+		if ($is_rgb) {
+			return $value;
+		}
+
+		$is_hsl = preg_match('/^hsla?\(\s*(?:[12]?\d?\d|3[0-5]\d|360)\s*,\s*(?:100|[1-9]?\d)%\s*,\s*(?:100|[1-9]?\d)%(?:\s*,\s*(?:0|1|0?\.\d+))?\s*\)$/', $value);
+		if ($is_hsl) {
+			return $value;
+		}
+
+		return '';
 	}
 }
 
