@@ -75,6 +75,7 @@ final class HS_Comentarios_Botao_V2 {
 			'turnstileSiteKey'=> $site_key,
 			'turnstileAtivo'  => !empty($site_key),
 			'turnstileObrigatorio' => __('Confirme o captcha antes de enviar o comentário.', 'hs-comentarios-botao'),
+			'turnstileErroCarregamento' => __('Não foi possível carregar o captcha agora. Verifique a configuração das chaves Turnstile.', 'hs-comentarios-botao'),
 		]);
 	}
 
