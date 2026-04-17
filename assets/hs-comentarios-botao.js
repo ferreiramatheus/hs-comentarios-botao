@@ -60,16 +60,32 @@
 				form.appendChild(hiddenToken);
 			}
 
+			var hiddenEnabled = form.querySelector('input[name="hs_turnstile_enabled"]');
+			if (!hiddenEnabled) {
+				hiddenEnabled = document.createElement('input');
+				hiddenEnabled.type = 'hidden';
+				hiddenEnabled.name = 'hs_turnstile_enabled';
+				hiddenEnabled.value = '1';
+				form.appendChild(hiddenEnabled);
+			}
+
 			window.turnstile.render(widget, {
 				sitekey: widget.getAttribute('data-sitekey'),
 				callback: function (token) {
 					hiddenToken.value = token || '';
+					hiddenEnabled.value = '1';
 				},
 				'expired-callback': function () {
 					hiddenToken.value = '';
 				},
 				'error-callback': function () {
 					hiddenToken.value = '';
+					hiddenEnabled.value = '0';
+
+					var container = document.getElementById('hs-comentarios-container');
+					if (container && hsComentariosBotao.turnstileErroCarregamento) {
+						container.insertAdjacentHTML('afterbegin', '<p class="hs-comentarios-loading">' + hsComentariosBotao.turnstileErroCarregamento + '</p>');
+					}
 				}
 			});
 
@@ -145,8 +161,18 @@
 		if (!form) return;
 
 		if (hsComentariosBotao.turnstileAtivo) {
+			var enabledInput = form.querySelector('input[name="hs_turnstile_enabled"]');
+			var turnstileEnabled = !enabledInput || enabledInput.value === '1';
+			if (!turnstileEnabled) {
+				// Falha de configuração/carregamento do Turnstile: não bloqueia envio.
+				var tokenInputFallback = form.querySelector('input[name="hs_turnstile_token"]');
+				if (tokenInputFallback) {
+					tokenInputFallback.value = '';
+				}
+			}
+
 			var tokenInput = form.querySelector('input[name="hs_turnstile_token"]');
-			if (!tokenInput || !tokenInput.value) {
+			if (turnstileEnabled && (!tokenInput || !tokenInput.value)) {
 				var container = document.getElementById('hs-comentarios-container');
 				if (container) {
 					container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.turnstileObrigatorio + '</p>';
