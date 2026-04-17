@@ -37,20 +37,25 @@ final class HS_Comentarios_Botao_V2 {
 
 	public function registrar_assets() {
 		$base_url = plugin_dir_url(__FILE__);
+		$base_path = plugin_dir_path(__FILE__);
 		$site_key = $this->get_turnstile_site_key();
+		$css_file = $base_path . 'assets/hs-comentarios-botao.css';
+		$js_file = $base_path . 'assets/hs-comentarios-botao.js';
+		$css_version = file_exists($css_file) ? (string) filemtime($css_file) : '2.0.0';
+		$js_version = file_exists($js_file) ? (string) filemtime($js_file) : '2.2.0';
 
 		wp_register_style(
 			'hs-comentarios-botao',
 			$base_url . 'assets/hs-comentarios-botao.css',
 			[],
-			'2.0.0'
+			$css_version
 		);
 
 		wp_register_script(
 			'hs-comentarios-botao',
 			$base_url . 'assets/hs-comentarios-botao.js',
 			[],
-			'2.2.0',
+			$js_version,
 			true
 		);
 
