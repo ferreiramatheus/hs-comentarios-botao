@@ -301,6 +301,8 @@ final class HS_Comentarios_Botao_V2 {
 	private function render_comments_page($post_obj) {
 		$title = 'Comentários - ' . get_the_title($post_obj);
 		$post_url = get_permalink($post_obj->ID);
+		$request_uri = isset($_SERVER['REQUEST_URI']) ? wp_unslash($_SERVER['REQUEST_URI']) : '/';
+		$current_comments_page_url = home_url($request_uri);
 
 		?>
 		<!DOCTYPE html>
@@ -378,6 +380,7 @@ final class HS_Comentarios_Botao_V2 {
 							'title_reply'        => __('Deixe um comentário', 'hs-comentarios-botao'),
 							'title_reply_before' => '<h2 id="reply-title" class="comment-reply-title">',
 							'title_reply_after'  => '</h2>',
+							'submit_field'       => '<input type="hidden" name="redirect_to" value="' . esc_attr($current_comments_page_url) . '" />%1$s %2$s',
 						], $post_obj->ID);
 					}
 
