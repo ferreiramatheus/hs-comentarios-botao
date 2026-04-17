@@ -45,7 +45,7 @@ final class HS_Comentarios_Botao_V2 {
 			'hs-comentarios-botao',
 			$base_url . 'assets/hs-comentarios-botao.js',
 			[],
-			'2.0.0',
+			'2.0.1',
 			true
 		);
 
@@ -56,6 +56,8 @@ final class HS_Comentarios_Botao_V2 {
 			'fecharLabel'     => __('Fechar comentários', 'hs-comentarios-botao'),
 			'erro'            => __('Não foi possível carregar os comentários.', 'hs-comentarios-botao'),
 			'carregando'      => __('Carregando comentários...', 'hs-comentarios-botao'),
+			'enviando'        => __('Enviando comentário...', 'hs-comentarios-botao'),
+			'erroEnvio'       => __('Não foi possível enviar o comentário. Verifique os campos e tente novamente.', 'hs-comentarios-botao'),
 		]);
 	}
 
