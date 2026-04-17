@@ -252,6 +252,10 @@
 			var form = container ? container.querySelector('form.comment-form') : null;
 			var postIdField = form ? form.querySelector('input[name="comment_post_ID"]') : null;
 			var postId = postIdField ? postIdField.value : null;
+			if (!postId && container) {
+				var ajaxWrapper = container.querySelector('.hs-comentarios-ajax-inner[data-post-id]');
+				postId = ajaxWrapper ? ajaxWrapper.getAttribute('data-post-id') : null;
+			}
 			var cpage = parseInt(pageButton.getAttribute('data-cpage'), 10);
 			if (!postId || !cpage || cpage < 1) return;
 

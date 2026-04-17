@@ -152,7 +152,15 @@ final class HS_Comentarios_Botao_V2 {
 
 		$classes = ['hs-comentarios-botao'];
 		if (!empty($atts['class'])) {
-			$classes[] = sanitize_html_class($atts['class']);
+			$custom_classes = preg_split('/\s+/', (string) $atts['class']);
+			if (is_array($custom_classes)) {
+				foreach ($custom_classes as $custom_class) {
+					$sanitized = sanitize_html_class($custom_class);
+					if (!empty($sanitized)) {
+						$classes[] = $sanitized;
+					}
+				}
+			}
 		}
 
 		$style_wrap = 'text-align:' . esc_attr($alinhar) . ';';
@@ -275,7 +283,7 @@ final class HS_Comentarios_Botao_V2 {
 
 		ob_start();
 
-		echo '<div class="hs-comentarios-ajax-inner">';
+		echo '<div class="hs-comentarios-ajax-inner" data-post-id="' . esc_attr($post_id) . '">';
 
 		echo $this->get_comments_list_html($post_id, $cpage, true);
 
