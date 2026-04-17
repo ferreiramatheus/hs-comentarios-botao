@@ -37,12 +37,19 @@
 		container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.erro + '</p>';
 	}
 
-	function loadComments(postId) {
+	function loadComments(postId, cpage) {
+		var page = parseInt(cpage || 1, 10);
+		if (!page || page < 1) {
+			page = 1;
+		}
+
 		setLoading();
 		openModal();
 
 		var url = hsComentariosBotao.ajaxUrl +
-			'?action=hs_carregar_comentarios&post_id=' + encodeURIComponent(postId);
+			'?action=hs_carregar_comentarios&post_id=' + encodeURIComponent(postId) +
+			'&cpage=' + encodeURIComponent(page) +
+			'&nonce=' + encodeURIComponent(hsComentariosBotao.nonceCarregar);
 
 		fetch(url, {
 			method: 'GET',
@@ -86,8 +93,8 @@
 					throw new Error('comment_submit_failed');
 				}
 
-				loadComments(postId);
-			})
+					loadComments(postId, 1);
+				})
 			.catch(function () {
 				var container = document.getElementById('hs-comentarios-container');
 				if (!container) return;
@@ -116,11 +123,11 @@
 			return;
 		}
 
-		if (modo === 'modal') {
-			event.preventDefault();
-			loadComments(postId);
-			return;
-		}
+			if (modo === 'modal') {
+				event.preventDefault();
+				loadComments(postId, 1);
+				return;
+			}
 
 		if (modo === 'modal_desktop_page_mobile') {
 			if (isMobile(parseInt(hsComentariosBotao.mobileBreakpoint, 10))) {
@@ -128,10 +135,25 @@
 				return;
 			}
 
+				event.preventDefault();
+				loadComments(postId, 1);
+			}
+		});
+
+		document.addEventListener('click', function (event) {
+			var pageButton = event.target.closest('#hs-comentarios-container .hs-comentarios-page-link[data-cpage]');
+			if (!pageButton) return;
+
+			var container = document.getElementById('hs-comentarios-container');
+			var form = container ? container.querySelector('form.comment-form') : null;
+			var postIdField = form ? form.querySelector('input[name="comment_post_ID"]') : null;
+			var postId = postIdField ? postIdField.value : null;
+			var cpage = parseInt(pageButton.getAttribute('data-cpage'), 10);
+			if (!postId || !cpage || cpage < 1) return;
+
 			event.preventDefault();
-			loadComments(postId);
-		}
-	});
+			loadComments(postId, cpage);
+		});
 
 	document.addEventListener('keydown', function (event) {
 		if (event.key === 'Escape') {
