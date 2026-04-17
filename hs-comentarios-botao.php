@@ -292,6 +292,7 @@ final class HS_Comentarios_Botao_V2 {
 				'title_reply'        => __('Deixe um comentário', 'hs-comentarios-botao'),
 				'title_reply_before' => '<h3 id="reply-title" class="comment-reply-title">',
 				'title_reply_after'  => '</h3>',
+				'fields'             => $this->get_comment_form_fields_without_url(),
 			], $post_id);
 		}
 
@@ -404,6 +405,7 @@ final class HS_Comentarios_Botao_V2 {
 							'title_reply'        => __('Deixe um comentário', 'hs-comentarios-botao'),
 							'title_reply_before' => '<h2 id="reply-title" class="comment-reply-title">',
 							'title_reply_after'  => '</h2>',
+							'fields'             => $this->get_comment_form_fields_without_url(),
 							'submit_field'       => '<input type="hidden" name="redirect_to" value="' . esc_attr($current_comments_page_url) . '" />%1$s %2$s',
 						], $post_obj->ID);
 					}
@@ -490,6 +492,21 @@ final class HS_Comentarios_Botao_V2 {
 		}
 
 		return ob_get_clean();
+	}
+
+	private function get_comment_form_fields_without_url() {
+		$commenter = wp_get_current_commenter();
+		$req = get_option('require_name_email');
+		$required_text = $req ? ' required' : '';
+		$aria_required = $req ? ' aria-required="true"' : '';
+
+		$author_value = isset($commenter['comment_author']) ? (string) $commenter['comment_author'] : '';
+		$email_value = isset($commenter['comment_author_email']) ? (string) $commenter['comment_author_email'] : '';
+
+		return [
+			'author' => '<p class="comment-form-author"><label for="author">' . __('Nome') . ($req ? ' *' : '') . '</label> <input id="author" name="author" type="text" value="' . esc_attr($author_value) . '" size="30" maxlength="245" autocomplete="name"' . $aria_required . $required_text . ' /></p>',
+			'email'  => '<p class="comment-form-email"><label for="email">' . __('E-mail') . ($req ? ' *' : '') . '</label> <input id="email" name="email" type="email" value="' . esc_attr($email_value) . '" size="30" maxlength="100" autocomplete="email"' . $aria_required . $required_text . ' /></p>',
+		];
 	}
 
 	private function sanitize_color_value($value) {
