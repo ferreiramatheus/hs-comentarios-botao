@@ -298,9 +298,9 @@ final class HS_Comentarios_Botao_V2 {
 		exit;
 	}
 
-	private function render_comments_page($post) {
-		$title = 'Comentários - ' . get_the_title($post);
-		$post_url = get_permalink($post->ID);
+	private function render_comments_page($post_obj) {
+		$title = 'Comentários - ' . get_the_title($post_obj);
+		$post_url = get_permalink($post_obj->ID);
 
 		?>
 		<!DOCTYPE html>
@@ -347,15 +347,17 @@ final class HS_Comentarios_Botao_V2 {
 						<div>
 							<a href="<?php echo esc_url($post_url); ?>">← Voltar para o post</a>
 						</div>
-						<h1><?php echo esc_html(get_the_title($post)); ?></h1>
+						<h1><?php echo esc_html(get_the_title($post_obj)); ?></h1>
 					</div>
 
 					<?php
 					global $post;
+					$previous_post = $post;
+					$post = $post_obj;
 					setup_postdata($post);
 
 					$comments = get_comments([
-						'post_id' => $post->ID,
+						'post_id' => $post_obj->ID,
 						'status'  => 'approve',
 					]);
 
@@ -371,15 +373,16 @@ final class HS_Comentarios_Botao_V2 {
 						echo '<p>Ainda não há comentários.</p>';
 					}
 
-					if (comments_open($post->ID)) {
+					if (comments_open($post_obj->ID)) {
 						comment_form([
 							'title_reply'        => __('Deixe um comentário', 'hs-comentarios-botao'),
 							'title_reply_before' => '<h2 id="reply-title" class="comment-reply-title">',
 							'title_reply_after'  => '</h2>',
-						], $post->ID);
+						], $post_obj->ID);
 					}
 
 					wp_reset_postdata();
+					$post = $previous_post;
 					?>
 				</div>
 			</div>
