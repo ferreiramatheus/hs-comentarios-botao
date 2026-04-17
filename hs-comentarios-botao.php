@@ -354,13 +354,18 @@ final class HS_Comentarios_Botao_V2 {
 					global $post;
 					setup_postdata($post);
 
-					if (have_comments()) {
+					$comments = get_comments([
+						'post_id' => $post->ID,
+						'status'  => 'approve',
+					]);
+
+					if (!empty($comments)) {
 						echo '<div class="hs-comentarios-lista">';
 						wp_list_comments([
 							'style'       => 'ol',
 							'short_ping'  => true,
 							'avatar_size' => 48,
-						]);
+						], $comments);
 						echo '</div>';
 					} else {
 						echo '<p>Ainda não há comentários.</p>';
