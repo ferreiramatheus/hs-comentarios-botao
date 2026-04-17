@@ -77,6 +77,26 @@
 		});
 	}
 
+	function renderTurnstileWidgetsWhenReady(scope, attemptsLeft) {
+		var attempts = typeof attemptsLeft === 'number' ? attemptsLeft : 20;
+		if (!hsComentariosBotao.turnstileAtivo) {
+			return;
+		}
+
+		if (window.turnstile) {
+			renderTurnstileWidgets(scope);
+			return;
+		}
+
+		if (attempts <= 0) {
+			return;
+		}
+
+		window.setTimeout(function () {
+			renderTurnstileWidgetsWhenReady(scope, attempts - 1);
+		}, 250);
+	}
+
 	function setError() {
 		var container = document.getElementById('hs-comentarios-container');
 		if (!container) return;
@@ -114,7 +134,7 @@
 				}
 
 				container.innerHTML = data.data.html;
-				renderTurnstileWidgets(container);
+				renderTurnstileWidgetsWhenReady(container);
 			})
 			.catch(function () {
 				setError();
@@ -230,12 +250,9 @@
 	});
 
 	if (hsComentariosBotao.turnstileAtivo) {
-		if (window.turnstile) {
-			renderTurnstileWidgets(document);
-		} else {
-			window.addEventListener('load', function () {
-				renderTurnstileWidgets(document);
-			});
-		}
+		renderTurnstileWidgetsWhenReady(document);
+		window.addEventListener('load', function () {
+			renderTurnstileWidgetsWhenReady(document);
+		});
 	}
 })();
