@@ -25,6 +25,12 @@
 		container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.carregando + '</p>';
 	}
 
+	function setSubmitting() {
+		var container = document.getElementById('hs-comentarios-container');
+		if (!container) return;
+		container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.enviando + '</p>';
+	}
+
 	function setError() {
 		var container = document.getElementById('hs-comentarios-container');
 		if (!container) return;
@@ -58,6 +64,34 @@
 			})
 			.catch(function () {
 				setError();
+			});
+	}
+
+	function submitCommentForm(form) {
+		if (!form) return;
+
+		var postIdField = form.querySelector('input[name="comment_post_ID"]');
+		var postId = postIdField ? postIdField.value : '';
+		if (!postId) return;
+
+		setSubmitting();
+
+		fetch(form.action, {
+			method: 'POST',
+			credentials: 'same-origin',
+			body: new FormData(form)
+		})
+			.then(function (response) {
+				if (!response.ok) {
+					throw new Error('comment_submit_failed');
+				}
+
+				loadComments(postId);
+			})
+			.catch(function () {
+				var container = document.getElementById('hs-comentarios-container');
+				if (!container) return;
+				container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.erroEnvio + '</p>';
 			});
 	}
 
@@ -101,5 +135,15 @@
 		if (event.key === 'Escape') {
 			closeModal();
 		}
+	});
+
+	document.addEventListener('submit', function (event) {
+		var form = event.target;
+		if (!form || !form.matches('#hs-comentarios-container form.comment-form')) {
+			return;
+		}
+
+		event.preventDefault();
+		submitCommentForm(form);
 	});
 })();
