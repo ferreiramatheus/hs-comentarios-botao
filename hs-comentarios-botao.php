@@ -253,6 +253,11 @@ final class HS_Comentarios_Botao_V2 {
 						<?php esc_html_e('Comentários', 'hs-comentarios-botao'); ?>
 					</h2>
 
+					<div id="hs-comentarios-modal-post-meta" class="hs-comentarios-modal__post-meta" hidden>
+						<img id="hs-comentarios-modal-post-image" class="hs-comentarios-modal__post-image" src="" alt="">
+						<p id="hs-comentarios-modal-post-title" class="hs-comentarios-modal__post-title"></p>
+					</div>
+
 					<div id="hs-comentarios-container" class="hs-comentarios-container">
 						<p class="hs-comentarios-loading"><?php esc_html_e('Carregando comentários...', 'hs-comentarios-botao'); ?></p>
 					</div>
@@ -322,6 +327,26 @@ final class HS_Comentarios_Botao_V2 {
 				number_format_i18n($comments_number)
 			)
 			: __('Comentários', 'hs-comentarios-botao');
+		$post_title = get_the_title($post_id);
+		$featured_image_url = get_the_post_thumbnail_url($post_id, 'medium_large');
+		$featured_image_alt = get_post_meta(get_post_thumbnail_id($post_id), '_wp_attachment_image_alt', true);
+		if (empty($featured_image_alt)) {
+			$featured_image_alt = $post_title;
+		}
+
+		$modal_title = sprintf(
+			/* translators: 1: total de comentários, 2: título do post */
+			__('%1$s em %2$s', 'hs-comentarios-botao'),
+			$comments_label,
+			$post_title_trimmed
+		);
+
+		$modal_title = sprintf(
+			/* translators: 1: total de comentários, 2: título do post */
+			__('%1$s em %2$s', 'hs-comentarios-botao'),
+			$comments_label,
+			$post_title_trimmed
+		);
 
 		$modal_title = sprintf(
 			/* translators: 1: total de comentários, 2: título do post */
