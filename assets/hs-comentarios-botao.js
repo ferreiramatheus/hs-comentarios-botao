@@ -199,11 +199,11 @@
 			var enabledInput = form.querySelector('input[name="hs_turnstile_enabled"]');
 			var turnstileEnabled = !enabledInput || enabledInput.value === '1';
 			if (!turnstileEnabled) {
-				// Falha de configuração/carregamento do Turnstile: não bloqueia envio.
-				var tokenInputFallback = form.querySelector('input[name="hs_turnstile_token"]');
-				if (tokenInputFallback) {
-					tokenInputFallback.value = '';
+				var containerConfig = document.getElementById('hs-comentarios-container');
+				if (containerConfig) {
+					containerConfig.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.turnstileErroCarregamento + '</p>';
 				}
+				return;
 			}
 
 			var tokenInput = form.querySelector('input[name="hs_turnstile_token"]');
