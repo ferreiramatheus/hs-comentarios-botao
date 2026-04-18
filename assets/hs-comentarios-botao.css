@@ -7,6 +7,20 @@
 	cursor: pointer;
 	padding: 8px 12px;
 	border: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.hs-comentarios-botao__icon {
+	display: inline-flex;
+	line-height: 0;
+}
+
+.hs-comentarios-botao__icon svg {
+	width: 1em;
+	height: 1em;
+	display: block;
 }
 
 /* Modal: só estrutura mínima */
