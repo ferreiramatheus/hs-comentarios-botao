@@ -27,6 +27,7 @@
 		var container = document.getElementById('hs-comentarios-container');
 		if (!container) return;
 		updateModalTitle(hsComentariosBotao.tituloComentarios);
+		updateModalPostMeta();
 		container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.carregando + '</p>';
 	}
 
@@ -143,6 +144,7 @@
 		var container = document.getElementById('hs-comentarios-container');
 		if (!container) return;
 		updateModalTitle(hsComentariosBotao.tituloComentarios);
+		updateModalPostMeta();
 		container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.erro + '</p>';
 	}
 
@@ -151,6 +153,42 @@
 		if (!titleEl) return;
 
 		titleEl.textContent = title || hsComentariosBotao.tituloComentarios;
+	}
+
+	function updateModalPostMeta(data) {
+		var postMeta = document.getElementById('hs-comentarios-modal-post-meta');
+		var titleEl = document.getElementById('hs-comentarios-modal-post-title');
+		var imageEl = document.getElementById('hs-comentarios-modal-post-image');
+
+		if (!postMeta || !titleEl || !imageEl) {
+			return;
+		}
+
+		var postTitle = data && data.postTitle ? data.postTitle : '';
+		var featuredImageUrl = data && data.featuredImageUrl ? data.featuredImageUrl : '';
+		var featuredImageAlt = data && data.featuredImageAlt ? data.featuredImageAlt : postTitle;
+
+		if (!postTitle && !featuredImageUrl) {
+			postMeta.hidden = true;
+			titleEl.textContent = '';
+			imageEl.hidden = true;
+			imageEl.setAttribute('src', '');
+			imageEl.setAttribute('alt', '');
+			return;
+		}
+
+		postMeta.hidden = false;
+		titleEl.textContent = postTitle;
+
+		if (featuredImageUrl) {
+			imageEl.hidden = false;
+			imageEl.setAttribute('src', featuredImageUrl);
+			imageEl.setAttribute('alt', featuredImageAlt || '');
+		} else {
+			imageEl.hidden = true;
+			imageEl.setAttribute('src', '');
+			imageEl.setAttribute('alt', '');
+		}
 	}
 
 	function loadComments(postId, cpage) {
@@ -185,6 +223,7 @@
 
 				container.innerHTML = data.data.html;
 				updateModalTitle(data.data.modalTitle);
+				updateModalPostMeta(data.data);
 				renderTurnstileWidgetsWhenReady(container);
 			})
 			.catch(function () {
