@@ -80,6 +80,9 @@ final class HS_Comentarios_Botao_V2 {
 			'turnstileAtivo'  => !empty($site_key),
 			'turnstileObrigatorio' => __('Confirme o captcha antes de enviar o comentário.', 'hs-comentarios-botao'),
 			'turnstileErroCarregamento' => __('Não foi possível carregar o captcha agora. Verifique a configuração das chaves Turnstile.', 'hs-comentarios-botao'),
+			'tituloComentarios' => __('Comentários', 'hs-comentarios-botao'),
+			'tituloComentarioSingular' => __('%s Comentário', 'hs-comentarios-botao'),
+			'tituloComentarioPlural' => __('%s Comentários', 'hs-comentarios-botao'),
 		]);
 	}
 
@@ -306,9 +309,17 @@ final class HS_Comentarios_Botao_V2 {
 		wp_reset_postdata();
 
 		$html = ob_get_clean();
+		$comments_number = (int) get_comments_number($post_id);
+		$modal_title = $comments_number > 0
+			? sprintf(
+				_n('%s Comentário', '%s Comentários', $comments_number, 'hs-comentarios-botao'),
+				number_format_i18n($comments_number)
+			)
+			: __('Comentários', 'hs-comentarios-botao');
 
 		wp_send_json_success([
 			'html' => $html,
+			'modalTitle' => $modal_title,
 		]);
 	}
 
