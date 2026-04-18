@@ -185,6 +185,7 @@
 
 				container.innerHTML = data.data.html;
 				updateModalTitle(data.data.modalTitle);
+				updateModalPostMeta(data.data);
 				renderTurnstileWidgetsWhenReady(container);
 			})
 			.catch(function () {
