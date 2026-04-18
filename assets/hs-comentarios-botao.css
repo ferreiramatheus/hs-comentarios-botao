@@ -74,6 +74,9 @@
 .hs-comentarios-modal__title {
 	margin-top: 0;
 	padding-right: 36px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 body.hs-comentarios-modal-open {
