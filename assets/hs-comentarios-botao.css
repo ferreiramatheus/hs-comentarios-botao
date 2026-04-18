@@ -36,7 +36,7 @@
 	justify-content: center;
 	align-items: flex-start;
 	padding: 20px 16px;
-	overflow-y: auto;
+	overflow: hidden;
 }
 
 .hs-comentarios-modal__overlay {
@@ -49,8 +49,8 @@
 	position: relative;
 	z-index: 2;
 	width: min(900px, 100%);
-	max-height: 100vh;
-	max-height: 100dvh;
+	max-height: calc(100vh - 40px);
+	max-height: calc(100dvh - 40px);
 	overflow-y: auto;
 	background: white;
 	padding: 16px;
@@ -89,5 +89,7 @@ body.hs-comentarios-modal-open {
 
 	.hs-comentarios-modal__dialog {
 		width: 100%;
+		max-height: calc(100vh - 16px);
+		max-height: calc(100dvh - 16px);
 	}
 }
