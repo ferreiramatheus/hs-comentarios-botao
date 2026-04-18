@@ -341,6 +341,13 @@ final class HS_Comentarios_Botao_V2 {
 			$post_title_trimmed
 		);
 
+		$modal_title = sprintf(
+			/* translators: 1: total de comentários, 2: título do post */
+			__('%1$s em %2$s', 'hs-comentarios-botao'),
+			$comments_label,
+			$post_title_trimmed
+		);
+
 		wp_send_json_success([
 			'html'       => $html,
 			'modalTitle' => $modal_title,
