@@ -26,6 +26,7 @@
 	function setLoading() {
 		var container = document.getElementById('hs-comentarios-container');
 		if (!container) return;
+		updateModalTitle(hsComentariosBotao.tituloComentarios);
 		container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.carregando + '</p>';
 	}
 
@@ -141,7 +142,15 @@
 	function setError() {
 		var container = document.getElementById('hs-comentarios-container');
 		if (!container) return;
+		updateModalTitle(hsComentariosBotao.tituloComentarios);
 		container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.erro + '</p>';
+	}
+
+	function updateModalTitle(title) {
+		var titleEl = document.getElementById('hs-comentarios-modal-title');
+		if (!titleEl) return;
+
+		titleEl.textContent = title || hsComentariosBotao.tituloComentarios;
 	}
 
 	function loadComments(postId, cpage) {
@@ -175,6 +184,7 @@
 				}
 
 				container.innerHTML = data.data.html;
+				updateModalTitle(data.data.modalTitle);
 				renderTurnstileWidgetsWhenReady(container);
 			})
 			.catch(function () {
