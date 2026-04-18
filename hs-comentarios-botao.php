@@ -315,7 +315,13 @@ final class HS_Comentarios_Botao_V2 {
 
 		$html = ob_get_clean();
 		$comments_number = (int) get_comments_number($post_id);
-		$modal_title = $comments_number > 0
+		$post_title = get_the_title($post_id);
+		$post_title_trimmed = wp_html_excerpt(wp_strip_all_tags((string) $post_title), 60, '…');
+		if ('' === $post_title_trimmed) {
+			$post_title_trimmed = __('este post', 'hs-comentarios-botao');
+		}
+
+		$comments_label = $comments_number > 0
 			? sprintf(
 				_n('%s Comentário', '%s Comentários', $comments_number, 'hs-comentarios-botao'),
 				number_format_i18n($comments_number)
@@ -328,12 +334,16 @@ final class HS_Comentarios_Botao_V2 {
 			$featured_image_alt = $post_title;
 		}
 
+		$modal_title = sprintf(
+			/* translators: 1: total de comentários, 2: título do post */
+			__('%1$s em %2$s', 'hs-comentarios-botao'),
+			$comments_label,
+			$post_title_trimmed
+		);
+
 		wp_send_json_success([
-			'html'              => $html,
-			'modalTitle'        => $modal_title,
-			'postTitle'         => $post_title,
-			'featuredImageUrl'  => $featured_image_url ? $featured_image_url : '',
-			'featuredImageAlt'  => $featured_image_alt,
+			'html'       => $html,
+			'modalTitle' => $modal_title,
 		]);
 	}
 

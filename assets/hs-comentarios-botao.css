@@ -74,28 +74,9 @@
 .hs-comentarios-modal__title {
 	margin-top: 0;
 	padding-right: 36px;
-}
-
-.hs-comentarios-modal__post-meta {
-	display: flex;
-	align-items: center;
-	gap: 12px;
-	margin: -4px 0 20px;
-}
-
-.hs-comentarios-modal__post-image {
-	width: 64px;
-	height: 64px;
-	border-radius: 8px;
-	object-fit: cover;
-	flex-shrink: 0;
-}
-
-.hs-comentarios-modal__post-title {
-	margin: 0;
-	font-size: 1rem;
-	font-weight: 600;
-	line-height: 1.4;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 body.hs-comentarios-modal-open {
