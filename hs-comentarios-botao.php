@@ -316,7 +316,7 @@ final class HS_Comentarios_Botao_V2 {
 		$html = ob_get_clean();
 		$comments_number = (int) get_comments_number($post_id);
 		$post_title = get_the_title($post_id);
-		$post_title_trimmed = $this->trim_text_with_ellipsis((string) $post_title, 60);
+		$post_title_trimmed = wp_html_excerpt(wp_strip_all_tags((string) $post_title), 60, '…');
 		if ('' === $post_title_trimmed) {
 			$post_title_trimmed = __('este post', 'hs-comentarios-botao');
 		}
@@ -333,13 +333,6 @@ final class HS_Comentarios_Botao_V2 {
 		if (empty($featured_image_alt)) {
 			$featured_image_alt = $post_title;
 		}
-
-		$modal_title = sprintf(
-			/* translators: 1: total de comentários, 2: título do post */
-			__('%1$s em %2$s', 'hs-comentarios-botao'),
-			$comments_label,
-			$post_title_trimmed
-		);
 
 		$modal_title = sprintf(
 			/* translators: 1: total de comentários, 2: título do post */
@@ -561,25 +554,6 @@ final class HS_Comentarios_Botao_V2 {
 			'author' => '<p class="comment-form-author"><label for="author">' . __('Nome') . ($req ? ' *' : '') . '</label> <input id="author" name="author" type="text" value="' . esc_attr($author_value) . '" size="30" maxlength="245" autocomplete="name"' . $aria_required . $required_text . ' /></p>',
 			'email'  => '<p class="comment-form-email"><label for="email">' . __('E-mail') . ($req ? ' *' : '') . '</label> <input id="email" name="email" type="email" value="' . esc_attr($email_value) . '" size="30" maxlength="100" autocomplete="email"' . $aria_required . $required_text . ' /></p>',
 		];
-	}
-
-	private function trim_text_with_ellipsis($text, $max_chars = 60) {
-		$clean_text = wp_strip_all_tags((string) $text);
-		$limit = max(1, (int) $max_chars);
-
-		if (function_exists('mb_strlen') && function_exists('mb_substr')) {
-			if (mb_strlen($clean_text, 'UTF-8') <= $limit) {
-				return $clean_text;
-			}
-
-			return rtrim(mb_substr($clean_text, 0, $limit - 1, 'UTF-8')) . '…';
-		}
-
-		if (strlen($clean_text) <= $limit) {
-			return $clean_text;
-		}
-
-		return rtrim(substr($clean_text, 0, $limit - 1)) . '…';
 	}
 
 	private function sanitize_color_value($value) {
