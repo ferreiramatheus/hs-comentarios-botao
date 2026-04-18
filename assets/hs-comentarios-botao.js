@@ -255,29 +255,39 @@
 		var postId = btn.getAttribute('data-post-id');
 		var commentsUrl = btn.getAttribute('data-comments-url');
 
-		if (!postId || !commentsUrl) return;
+		if (!postId) return;
 
 		if (modo === 'page') {
+			if (!commentsUrl) return;
 			window.location.href = commentsUrl;
 			return;
 		}
 
-			if (modo === 'modal') {
-				event.preventDefault();
-				loadComments(postId, 1);
-				return;
-			}
+		if (modo === 'modal') {
+			event.preventDefault();
+			loadComments(postId, 1);
+			return;
+		}
 
 		if (modo === 'modal_desktop_page_mobile') {
 			if (isMobile(parseInt(hsComentariosBotao.mobileBreakpoint, 10))) {
+				if (!commentsUrl) {
+					event.preventDefault();
+					loadComments(postId, 1);
+					return;
+				}
 				window.location.href = commentsUrl;
 				return;
 			}
 
-				event.preventDefault();
-				loadComments(postId, 1);
-			}
-		});
+			event.preventDefault();
+			loadComments(postId, 1);
+			return;
+		}
+
+		event.preventDefault();
+		loadComments(postId, 1);
+	});
 
 		document.addEventListener('click', function (event) {
 			var pageButton = event.target.closest('#hs-comentarios-container .hs-comentarios-page-link[data-cpage]');
