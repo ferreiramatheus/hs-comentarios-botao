@@ -201,7 +201,12 @@ final class HS_Comentarios_Botao_V2 {
 				data-modo="<?php echo esc_attr($modo); ?>"
 				data-comments-url="<?php echo esc_url($comments_url); ?>"
 			>
-				<?php echo esc_html($label); ?>
+				<span class="hs-comentarios-botao__icon" aria-hidden="true">
+					<svg viewBox="0 0 248.32 248.32" focusable="false">
+						<path d="M175.86,228.15l68.96,15.05-15.01-68.96c7.7-15.61,11.99-33.16,11.99-51.72,0-64.97-52.69-117.66-117.66-117.66-64.97,0-117.62,52.69-117.62,117.66,0,64.93,52.64,117.62,117.62,117.62,18.56,0,36.11-4.29,51.72-11.99Z" fill="currentColor"/>
+					</svg>
+				</span>
+				<span class="hs-comentarios-botao__label"><?php echo esc_html($label); ?></span>
 			</button>
 		</div>
 		<?php
