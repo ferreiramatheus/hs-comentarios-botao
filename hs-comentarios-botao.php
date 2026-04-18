@@ -604,13 +604,13 @@ final class HS_Comentarios_Botao_V2 {
 	}
 
 	public function validar_turnstile_no_comentario($commentdata) {
-		$turnstile_ativo = isset($_POST['hs_turnstile_enabled']) && '1' === (string) wp_unslash($_POST['hs_turnstile_enabled']);
-		if (!$turnstile_ativo) {
+		$site_key = $this->get_turnstile_site_key();
+		$secret_key = $this->get_turnstile_secret_key();
+		$turnstile_configurado = !empty($site_key) || !empty($secret_key);
+		if (!$turnstile_configurado) {
 			return $commentdata;
 		}
 
-		$site_key = $this->get_turnstile_site_key();
-		$secret_key = $this->get_turnstile_secret_key();
 		if (empty($site_key) || empty($secret_key)) {
 			wp_die(
 				esc_html__('O captcha de comentários não está configurado.', 'hs-comentarios-botao'),
@@ -620,12 +620,12 @@ final class HS_Comentarios_Botao_V2 {
 		}
 
 		$token = '';
-		if (isset($_POST['hs_turnstile_token'])) {
-			$token = sanitize_text_field((string) wp_unslash($_POST['hs_turnstile_token']));
+		if (isset($_POST['cf-turnstile-response'])) {
+			$token = sanitize_text_field((string) wp_unslash($_POST['cf-turnstile-response']));
 		}
 
-		if (empty($token) && isset($_POST['cf-turnstile-response'])) {
-			$token = sanitize_text_field((string) wp_unslash($_POST['cf-turnstile-response']));
+		if (empty($token) && isset($_POST['hs_turnstile_token'])) {
+			$token = sanitize_text_field((string) wp_unslash($_POST['hs_turnstile_token']));
 		}
 
 		if (empty($token)) {
