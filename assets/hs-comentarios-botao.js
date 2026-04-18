@@ -27,6 +27,7 @@
 		var container = document.getElementById('hs-comentarios-container');
 		if (!container) return;
 		updateModalTitle(hsComentariosBotao.tituloComentarios);
+		updateModalPostMeta();
 		container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.carregando + '</p>';
 	}
 
@@ -143,6 +144,7 @@
 		var container = document.getElementById('hs-comentarios-container');
 		if (!container) return;
 		updateModalTitle(hsComentariosBotao.tituloComentarios);
+		updateModalPostMeta();
 		container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.erro + '</p>';
 	}
 
@@ -185,6 +187,7 @@
 
 				container.innerHTML = data.data.html;
 				updateModalTitle(data.data.modalTitle);
+				updateModalPostMeta(data.data);
 				renderTurnstileWidgetsWhenReady(container);
 			})
 			.catch(function () {

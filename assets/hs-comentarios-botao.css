@@ -91,4 +91,13 @@ body.hs-comentarios-modal-open {
 	.hs-comentarios-modal__dialog {
 		width: 100%;
 	}
+
+	.hs-comentarios-modal__post-meta {
+		align-items: flex-start;
+	}
+
+	.hs-comentarios-modal__post-image {
+		width: 56px;
+		height: 56px;
+	}
 }
