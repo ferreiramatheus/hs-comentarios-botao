@@ -35,6 +35,22 @@
 		container.innerHTML = '<p class="hs-comentarios-loading">' + hsComentariosBotao.enviando + '</p>';
 	}
 
+	function updateFormSubmitState(form, enabled) {
+		if (!form) {
+			return;
+		}
+
+		var submitButtons = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+		if (!submitButtons.length) {
+			return;
+		}
+
+		submitButtons.forEach(function (button) {
+			button.disabled = !enabled;
+			button.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+		});
+	}
+
 	function renderTurnstileWidgets(scope) {
 		if (!hsComentariosBotao.turnstileAtivo || !window.turnstile) {
 			return;
@@ -73,18 +89,23 @@
 				form.appendChild(hiddenEnabled);
 			}
 
+			updateFormSubmitState(form, false);
+
 			window.turnstile.render(widget, {
 				sitekey: widget.getAttribute('data-sitekey'),
 				callback: function (token) {
 					hiddenToken.value = token || '';
 					hiddenEnabled.value = '1';
+					updateFormSubmitState(form, !!(token && token.length));
 				},
 				'expired-callback': function () {
 					hiddenToken.value = '';
+					updateFormSubmitState(form, false);
 				},
 				'error-callback': function () {
 					hiddenToken.value = '';
 					hiddenEnabled.value = '0';
+					updateFormSubmitState(form, false);
 
 					var container = document.getElementById('hs-comentarios-container');
 					if (container && hsComentariosBotao.turnstileErroCarregamento) {
