@@ -498,11 +498,21 @@ final class HS_Comentarios_Botao_V2 {
 			$per_page = 20;
 		}
 
-		$total_comments = get_comments_number($post_id);
-		$total_pages = max(1, (int) ceil($total_comments / $per_page));
-		$cpage = min(max(1, (int) $cpage), $total_pages);
 		$include_unapproved = $this->get_include_unapproved_for_current_visitor();
 		$allow_unapproved_for_visitor = !empty($include_unapproved);
+		$total_comments = (int) get_comments_number($post_id);
+
+		if ($allow_unapproved_for_visitor) {
+			$total_comments = (int) get_comments([
+				'post_id'            => $post_id,
+				'status'             => 'all',
+				'include_unapproved' => $include_unapproved,
+				'count'              => true,
+			]);
+		}
+
+		$total_pages = max(1, (int) ceil($total_comments / $per_page));
+		$cpage = min(max(1, (int) $cpage), $total_pages);
 
 		$post_obj = get_post($post_id);
 		$modified = $post_obj ? strtotime((string) $post_obj->post_modified_gmt) : 0;
