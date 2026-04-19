@@ -296,6 +296,10 @@ final class HS_Comentarios_Botao_V2 {
 			wp_send_json_error(['message' => 'Requisição inválida.'], 403);
 		}
 
+		nocache_headers();
+		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+		header('Pragma: no-cache');
+
 		$post_id = isset($_GET['post_id']) ? absint($_GET['post_id']) : 0;
 		$cpage = isset($_GET['cpage']) ? max(1, absint($_GET['cpage'])) : 1;
 

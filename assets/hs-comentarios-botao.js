@@ -177,11 +177,13 @@
 		var url = config.ajaxUrl +
 			'?action=hs_carregar_comentarios&post_id=' + encodeURIComponent(postId) +
 			'&cpage=' + encodeURIComponent(page) +
-			'&nonce=' + encodeURIComponent(config.nonceCarregar);
+			'&nonce=' + encodeURIComponent(config.nonceCarregar) +
+			'&_cb=' + Date.now();
 
 		fetch(url, {
 			method: 'GET',
-			credentials: 'same-origin'
+			credentials: 'same-origin',
+			cache: 'no-store'
 		})
 			.then(function (response) {
 				return response.json();
