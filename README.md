@@ -41,6 +41,8 @@ Com esse formato padrão, o plugin:
   cor_fundo=""
   cor_texto=""
   alinhar="left"
+  width="block"
+  margin=""
   modo="modal_desktop_page_mobile"
   pagina_url=""
 ]
@@ -134,7 +136,36 @@ Exemplo:
 [hs_comentarios_botao alinhar="center"]
 ```
 
-### 7) `modo`
+### 7) `width`
+Controla como o botão ocupa largura.
+
+- Valores válidos: `block` ou `full`.
+- Padrão: `block`.
+- `block`: ocupa 100% da largura do container onde o shortcode foi inserido.
+- `full`: ocupa toda a largura da viewport (útil para mobile).
+- Valor inválido cai para `block`.
+
+Exemplos:
+
+```text
+[hs_comentarios_botao width="block"]
+[hs_comentarios_botao width="full"]
+```
+
+### 8) `margin`
+Define margem externa em pixels para o widget (wrapper do shortcode).
+
+- Padrão: vazio (mantém margem padrão do CSS do plugin).
+- Aceita apenas números inteiros sem unidade (ex.: `12`, `24`, `0`).
+- Valor inválido é ignorado.
+
+Exemplo:
+
+```text
+[hs_comentarios_botao margin="16"]
+```
+
+### 9) `modo`
 Controla como os comentários serão abertos.
 
 - Valores válidos:
@@ -152,7 +183,7 @@ Exemplos:
 [hs_comentarios_botao modo="modal_desktop_page_mobile"]
 ```
 
-### 8) `pagina_url`
+### 10) `pagina_url`
 Define uma URL personalizada para a página de comentários (usada nos modos com navegação por página).
 
 - Padrão: vazio.
@@ -190,6 +221,8 @@ https://seusite.com/comentarios?post_id=123
   cor_fundo="#0052cc"
   cor_texto="#ffffff"
   alinhar="center"
+  width="full"
+  margin="12"
 ]
 ```
 
