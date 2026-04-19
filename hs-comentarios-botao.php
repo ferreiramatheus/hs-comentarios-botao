@@ -125,7 +125,7 @@ final class HS_Comentarios_Botao_V2 {
 				'cor_fundo'          => '',
 				'cor_texto'          => '',
 				'alinhar'            => 'left',
-				'width'              => 'block',
+				'width'              => '',
 				'margin'             => '',
 				'modo'               => 'modal_desktop_page_mobile',
 				'pagina_url'         => '',
@@ -138,7 +138,7 @@ final class HS_Comentarios_Botao_V2 {
 		$label = $this->build_shortcode_label($atts['texto'], $mostrar_quantidade, (int) $comments_number);
 
 		$alinhar = $this->sanitize_shortcode_attr_value($atts['alinhar'], ['left', 'center', 'right'], 'left');
-		$width = $this->sanitize_shortcode_attr_value($atts['width'], ['block', 'full'], 'block');
+		$width = $this->sanitize_shortcode_attr_value($atts['width'], ['full'], '');
 		$modo = $this->sanitize_shortcode_attr_value($atts['modo'], ['modal', 'page', 'modal_desktop_page_mobile'], 'modal_desktop_page_mobile');
 
 		$comments_url = $this->get_comments_page_url($post->ID, $atts['pagina_url']);
@@ -157,8 +157,11 @@ final class HS_Comentarios_Botao_V2 {
 		}
 
 		$style_wrap_parts = ['text-align:' . esc_attr($alinhar)];
-		$classes[] = 'hs-comentarios-botao--width-' . $width;
-		$wrapper_classes = ['hs-comentarios-botao-wrap', 'hs-comentarios-botao-wrap--width-' . $width];
+		$wrapper_classes = ['hs-comentarios-botao-wrap'];
+		if ('full' === $width) {
+			$classes[] = 'hs-comentarios-botao--width-full';
+			$wrapper_classes[] = 'hs-comentarios-botao-wrap--width-full';
+		}
 		$margin = $this->sanitize_margin_value($atts['margin']);
 
 		if (null !== $margin) {
