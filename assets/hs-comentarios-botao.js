@@ -167,6 +167,7 @@
 	function loadComments(postId, cpage) {
 		var config = getConfig();
 		var page = parseInt(cpage || 1, 10);
+		var ajaxUrl = config.ajaxNoCacheUrl || config.ajaxUrl;
 		if (!page || page < 1) {
 			page = 1;
 		}
@@ -174,14 +175,21 @@
 		setLoading();
 		openModal();
 
-		var url = config.ajaxUrl +
-			'?action=hs_carregar_comentarios&post_id=' + encodeURIComponent(postId) +
-			'&cpage=' + encodeURIComponent(page) +
-			'&nonce=' + encodeURIComponent(config.nonceCarregar);
+		var body = new URLSearchParams();
+		body.append('action', 'hs_carregar_comentarios');
+		body.append('post_id', String(postId));
+		body.append('cpage', String(page));
+		body.append('nonce', String(config.nonceCarregar || ''));
+		body.append('_cb', String(Date.now()));
 
-		fetch(url, {
-			method: 'GET',
-			credentials: 'same-origin'
+		fetch(ajaxUrl, {
+			method: 'POST',
+			credentials: 'same-origin',
+			cache: 'no-store',
+			headers: {
+				'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+			},
+			body: body.toString()
 		})
 			.then(function (response) {
 				return response.json();
