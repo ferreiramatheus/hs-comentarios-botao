@@ -16,6 +16,10 @@ if (!defined('ABSPATH')) {
 
 final class HS_Comentarios_Botao_V2 {
 
+	private const COMMENT_NONCE_ACTION = 'hs_comentarios_comment_form_action';
+	private const COMMENT_NONCE_FIELD = 'hs_comentarios_comment_nonce';
+	private const COMMENT_HONEYPOT_FIELD = 'hp_field';
+
 	private $shortcode_usado = false;
 
 	public function __construct() {
@@ -28,6 +32,9 @@ final class HS_Comentarios_Botao_V2 {
 		add_action('wp_ajax_nopriv_hs_carregar_comentarios', [$this, 'ajax_carregar_comentarios']);
 
 		add_filter('comment_form_submit_field', [$this, 'inject_turnstile_before_submit'], 10, 2);
+		add_action('comment_form', [$this, 'render_campos_antispam']);
+		add_action('pre_comment_on_post', [$this, 'validar_nonce_comentario']);
+		add_filter('preprocess_comment', [$this, 'validar_honeypot_no_comentario'], 5);
 		add_filter('preprocess_comment', [$this, 'validar_turnstile_no_comentario']);
 
 		add_filter('query_vars', [$this, 'registrar_query_vars']);
@@ -601,6 +608,44 @@ final class HS_Comentarios_Botao_V2 {
 		$turnstile_html = ob_get_clean();
 
 		return $turnstile_html . $submit_field;
+	}
+
+	public function render_campos_antispam() {
+		wp_nonce_field(self::COMMENT_NONCE_ACTION, self::COMMENT_NONCE_FIELD);
+		echo '<p class="comment-form-hp-field" style="display:none !important;">';
+		echo '<label for="' . esc_attr(self::COMMENT_HONEYPOT_FIELD) . '">' . esc_html__('Não preencha este campo.', 'hs-comentarios-botao') . '</label>';
+		echo '<input id="' . esc_attr(self::COMMENT_HONEYPOT_FIELD) . '" name="' . esc_attr(self::COMMENT_HONEYPOT_FIELD) . '" type="text" value="" tabindex="-1" autocomplete="off" />';
+		echo '</p>';
+	}
+
+	public function validar_nonce_comentario($post_id) {
+		unset($post_id);
+		$nonce_raw = isset($_POST[self::COMMENT_NONCE_FIELD]) ? wp_unslash($_POST[self::COMMENT_NONCE_FIELD]) : '';
+		$nonce = is_string($nonce_raw) ? sanitize_text_field($nonce_raw) : '';
+		$nonce_valido = !empty($nonce) && wp_verify_nonce($nonce, self::COMMENT_NONCE_ACTION);
+
+		if (!$nonce_valido) {
+			wp_die(
+				esc_html__('Falha de segurança ao enviar o comentário. Recarregue a página e tente novamente.', 'hs-comentarios-botao'),
+				esc_html__('Comentário bloqueado', 'hs-comentarios-botao'),
+				['response' => 403]
+			);
+		}
+	}
+
+	public function validar_honeypot_no_comentario($commentdata) {
+		$honeypot_raw = isset($_POST[self::COMMENT_HONEYPOT_FIELD]) ? wp_unslash($_POST[self::COMMENT_HONEYPOT_FIELD]) : '';
+		$honeypot = is_string($honeypot_raw) ? trim(sanitize_text_field($honeypot_raw)) : '';
+
+		if ('' !== $honeypot) {
+			wp_die(
+				esc_html__('Comentário bloqueado por suspeita de spam.', 'hs-comentarios-botao'),
+				esc_html__('Comentário bloqueado', 'hs-comentarios-botao'),
+				['response' => 400]
+			);
+		}
+
+		return $commentdata;
 	}
 
 	public function validar_turnstile_no_comentario($commentdata) {
