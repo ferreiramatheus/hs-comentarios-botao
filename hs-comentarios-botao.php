@@ -125,6 +125,8 @@ final class HS_Comentarios_Botao_V2 {
 				'cor_fundo'          => '',
 				'cor_texto'          => '',
 				'alinhar'            => 'left',
+				'width'              => 'block',
+				'margin'             => '',
 				'modo'               => 'modal_desktop_page_mobile',
 				'pagina_url'         => '',
 			],
@@ -154,6 +156,10 @@ final class HS_Comentarios_Botao_V2 {
 			? $atts['alinhar']
 			: 'left';
 
+		$width = in_array($atts['width'], ['block', 'full'], true)
+			? $atts['width']
+			: 'block';
+
 		$modo = in_array($atts['modo'], ['modal', 'page', 'modal_desktop_page_mobile'], true)
 			? $atts['modo']
 			: 'modal_desktop_page_mobile';
@@ -173,7 +179,16 @@ final class HS_Comentarios_Botao_V2 {
 			}
 		}
 
-		$style_wrap = 'text-align:' . esc_attr($alinhar) . ';';
+		$style_wrap_parts = ['text-align:' . esc_attr($alinhar)];
+		$classes[] = 'hs-comentarios-botao--width-' . $width;
+		$wrapper_classes = ['hs-comentarios-botao-wrap', 'hs-comentarios-botao-wrap--width-' . $width];
+		$margin = $this->sanitize_margin_value($atts['margin']);
+
+		if (null !== $margin) {
+			$style_wrap_parts[] = 'margin:' . $margin . 'px';
+		}
+
+		$style_wrap = implode(';', $style_wrap_parts) . ';';
 		$inline_styles = [];
 
 		if (!empty($atts['cor_fundo'])) {
@@ -201,7 +216,7 @@ final class HS_Comentarios_Botao_V2 {
 
 		ob_start();
 		?>
-		<div class="hs-comentarios-botao-wrap" style="<?php echo esc_attr($style_wrap); ?>">
+		<div class="<?php echo esc_attr(implode(' ', $wrapper_classes)); ?>" style="<?php echo esc_attr($style_wrap); ?>">
 			<button
 				type="button"
 				class="<?php echo esc_attr(implode(' ', $classes)); ?>"
@@ -554,6 +569,23 @@ final class HS_Comentarios_Botao_V2 {
 		}
 
 		return '';
+	}
+
+	private function sanitize_margin_value($margin) {
+		if ($margin === '' || $margin === null) {
+			return null;
+		}
+
+		if (!is_scalar($margin)) {
+			return null;
+		}
+
+		$margin = trim((string) $margin);
+		if (!preg_match('/^\d+$/', $margin)) {
+			return null;
+		}
+
+		return (int) $margin;
 	}
 
 	private function get_turnstile_site_key() {
