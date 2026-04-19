@@ -232,7 +232,25 @@
 					throw new Error('comment_submit_failed');
 				}
 
-					loadComments(postId, 1);
+				var redirectedUrl = '';
+				if (typeof response.url === 'string') {
+					redirectedUrl = response.url;
+				}
+
+				var cpage = 1;
+				if (redirectedUrl) {
+					try {
+						var urlObj = new URL(redirectedUrl, window.location.origin);
+						var cpageQuery = parseInt(urlObj.searchParams.get('cpage') || '', 10);
+						if (cpageQuery > 0) {
+							cpage = cpageQuery;
+						}
+					} catch (error) {
+						cpage = 1;
+					}
+				}
+
+				loadComments(postId, cpage);
 				})
 			.catch(function () {
 				var container = document.getElementById('hs-comentarios-container');
@@ -312,7 +330,7 @@
 
 		event.preventDefault();
 		submitCommentForm(form);
-	});
+	}, true);
 
 	if (hsComentariosBotao.turnstileAtivo) {
 		renderTurnstileWidgetsWhenReady(document);

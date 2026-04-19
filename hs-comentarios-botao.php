@@ -468,23 +468,33 @@ final class HS_Comentarios_Botao_V2 {
 		$total_comments = get_comments_number($post_id);
 		$total_pages = max(1, (int) ceil($total_comments / $per_page));
 		$cpage = min(max(1, (int) $cpage), $total_pages);
+		$include_unapproved = $this->get_include_unapproved_for_current_visitor();
+		$allow_unapproved_for_visitor = !empty($include_unapproved);
 
 		$post_obj = get_post($post_id);
 		$modified = $post_obj ? strtotime((string) $post_obj->post_modified_gmt) : 0;
 		$cache_key_raw = $post_id . '|' . $cpage . '|' . $per_page . '|' . $total_comments . '|' . $modified;
 		$cache_key = 'hs_cb_comments_' . md5($cache_key_raw);
 
-		$list_html = get_transient($cache_key);
+		$list_html = $allow_unapproved_for_visitor ? false : get_transient($cache_key);
 		if (false === $list_html) {
 			$offset = ($cpage - 1) * $per_page;
-			$comments = get_comments([
+			$query_args = [
 				'post_id' => $post_id,
-				'status'  => 'approve',
 				'number'  => $per_page,
 				'offset'  => $offset,
 				'orderby' => 'comment_date_gmt',
 				'order'   => 'ASC',
-			]);
+			];
+
+			if ($allow_unapproved_for_visitor) {
+				$query_args['status'] = 'all';
+				$query_args['include_unapproved'] = $include_unapproved;
+			} else {
+				$query_args['status'] = 'approve';
+			}
+
+			$comments = get_comments($query_args);
 
 			ob_start();
 			if (!empty($comments)) {
@@ -499,7 +509,9 @@ final class HS_Comentarios_Botao_V2 {
 				echo '<p>Ainda não há comentários.</p>';
 			}
 			$list_html = ob_get_clean();
-			set_transient($cache_key, $list_html, MINUTE_IN_SECONDS * 5);
+			if (!$allow_unapproved_for_visitor) {
+				set_transient($cache_key, $list_html, MINUTE_IN_SECONDS * 5);
+			}
 		}
 
 		ob_start();
@@ -530,6 +542,23 @@ final class HS_Comentarios_Botao_V2 {
 		}
 
 		return ob_get_clean();
+	}
+
+	private function get_include_unapproved_for_current_visitor() {
+		$include_unapproved = [];
+		$current_user_id = get_current_user_id();
+
+		if ($current_user_id > 0) {
+			$include_unapproved[] = $current_user_id;
+		}
+
+		$commenter = wp_get_current_commenter();
+		$comment_author_email = isset($commenter['comment_author_email']) ? sanitize_email((string) $commenter['comment_author_email']) : '';
+		if (!empty($comment_author_email)) {
+			$include_unapproved[] = $comment_author_email;
+		}
+
+		return array_values(array_unique($include_unapproved));
 	}
 
 	private function get_comment_form_fields_without_url() {
