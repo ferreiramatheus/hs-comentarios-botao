@@ -135,34 +135,11 @@ final class HS_Comentarios_Botao_V2 {
 		);
 
 		$mostrar_quantidade = strtolower((string) $atts['mostrar_quantidade']) === 'yes';
+		$label = $this->build_shortcode_label($atts['texto'], $mostrar_quantidade, (int) $comments_number);
 
-		if (!empty($atts['texto'])) {
-			$label = $atts['texto'];
-		} else {
-			if ($mostrar_quantidade) {
-				if ((int) $comments_number === 0) {
-					$label = 'Comentários';
-				} elseif ((int) $comments_number === 1) {
-					$label = '1 comentário';
-				} else {
-					$label = number_format_i18n($comments_number) . ' comentários';
-				}
-			} else {
-				$label = 'Comentários';
-			}
-		}
-
-		$alinhar = in_array($atts['alinhar'], ['left', 'center', 'right'], true)
-			? $atts['alinhar']
-			: 'left';
-
-		$width = in_array($atts['width'], ['block', 'full'], true)
-			? $atts['width']
-			: 'block';
-
-		$modo = in_array($atts['modo'], ['modal', 'page', 'modal_desktop_page_mobile'], true)
-			? $atts['modo']
-			: 'modal_desktop_page_mobile';
+		$alinhar = $this->sanitize_shortcode_attr_value($atts['alinhar'], ['left', 'center', 'right'], 'left');
+		$width = $this->sanitize_shortcode_attr_value($atts['width'], ['block', 'full'], 'block');
+		$modo = $this->sanitize_shortcode_attr_value($atts['modo'], ['modal', 'page', 'modal_desktop_page_mobile'], 'modal_desktop_page_mobile');
 
 		$comments_url = $this->get_comments_page_url($post->ID, $atts['pagina_url']);
 
@@ -205,12 +182,12 @@ final class HS_Comentarios_Botao_V2 {
 			}
 		}
 
-			$style_btn = !empty($inline_styles) ? implode(';', $inline_styles) . ';' : '';
+		$style_btn = !empty($inline_styles) ? implode(';', $inline_styles) . ';' : '';
 
 		$this->shortcode_usado = true;
 		wp_enqueue_style('hs-comentarios-botao');
 		wp_enqueue_script('hs-comentarios-botao');
-		if (!empty($this->get_turnstile_site_key())) {
+		if ($this->is_turnstile_enabled()) {
 			wp_enqueue_script('hs-comentarios-turnstile');
 		}
 
@@ -236,6 +213,32 @@ final class HS_Comentarios_Botao_V2 {
 		</div>
 		<?php
 		return ob_get_clean();
+	}
+
+	private function sanitize_shortcode_attr_value($value, $allowed_values, $default) {
+		return in_array($value, $allowed_values, true)
+			? $value
+			: $default;
+	}
+
+	private function build_shortcode_label($custom_text, $show_count, $comments_number) {
+		if (!empty($custom_text)) {
+			return (string) $custom_text;
+		}
+
+		if (!$show_count) {
+			return 'Comentários';
+		}
+
+		if ($comments_number <= 0) {
+			return 'Comentários';
+		}
+
+		if (1 === $comments_number) {
+			return '1 comentário';
+		}
+
+		return number_format_i18n($comments_number) . ' comentários';
 	}
 
 	private function get_comments_page_url($post_id, $pagina_url = '') {
@@ -378,7 +381,7 @@ final class HS_Comentarios_Botao_V2 {
 		$cpage = isset($_GET['cpage']) ? max(1, absint($_GET['cpage'])) : 1;
 
 		wp_enqueue_script('hs-comentarios-botao');
-		if (!empty($this->get_turnstile_site_key())) {
+		if ($this->is_turnstile_enabled()) {
 			wp_enqueue_script('hs-comentarios-turnstile');
 		}
 
@@ -643,6 +646,10 @@ final class HS_Comentarios_Botao_V2 {
 		$secret_key = apply_filters('hs_comentarios_turnstile_secret_key', $secret_key);
 
 		return is_string($secret_key) ? trim($secret_key) : '';
+	}
+
+	private function is_turnstile_enabled() {
+		return !empty($this->get_turnstile_site_key());
 	}
 
 	public function render_turnstile_field() {
