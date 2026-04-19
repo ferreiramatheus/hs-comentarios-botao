@@ -75,6 +75,7 @@ final class HS_Comentarios_Botao_V2 {
 
 		wp_localize_script('hs-comentarios-botao', 'hsComentariosBotao', [
 			'ajaxUrl'         => admin_url('admin-ajax.php'),
+			'ajaxNoCacheUrl'  => add_query_arg('skipcache', 1, admin_url('admin-ajax.php')),
 			'nonceCarregar'   => wp_create_nonce('hs_carregar_comentarios'),
 			'modoPadrao'      => 'modal_desktop_page_mobile',
 			'mobileBreakpoint'=> 768,
@@ -249,6 +250,7 @@ final class HS_Comentarios_Botao_V2 {
 			return add_query_arg(
 				[
 					'post_id' => (int) $post_id,
+					'skipcache' => 1,
 				],
 				esc_url_raw($pagina_url)
 			);
@@ -258,6 +260,7 @@ final class HS_Comentarios_Botao_V2 {
 			[
 				'hs_comentarios_page' => 1,
 				'post_id'             => (int) $post_id,
+				'skipcache'           => 1,
 			],
 			home_url('/')
 		);
@@ -291,6 +294,16 @@ final class HS_Comentarios_Botao_V2 {
 	}
 
 	public function ajax_carregar_comentarios() {
+		if (!defined('DONOTCACHEPAGE')) {
+			define('DONOTCACHEPAGE', true);
+		}
+		if (!defined('DONOTCACHEOBJECT')) {
+			define('DONOTCACHEOBJECT', true);
+		}
+		if (!defined('DONOTCACHEDB')) {
+			define('DONOTCACHEDB', true);
+		}
+
 		$nonce_ok = check_ajax_referer('hs_carregar_comentarios', 'nonce', false);
 		if (!$nonce_ok) {
 			wp_send_json_error(['message' => 'Requisição inválida.'], 403);
@@ -300,8 +313,8 @@ final class HS_Comentarios_Botao_V2 {
 		header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 		header('Pragma: no-cache');
 
-		$post_id = isset($_GET['post_id']) ? absint($_GET['post_id']) : 0;
-		$cpage = isset($_GET['cpage']) ? max(1, absint($_GET['cpage'])) : 1;
+		$post_id = isset($_REQUEST['post_id']) ? absint($_REQUEST['post_id']) : 0;
+		$cpage = isset($_REQUEST['cpage']) ? max(1, absint($_REQUEST['cpage'])) : 1;
 
 		if (!$post_id) {
 			wp_send_json_error(['message' => 'Post inválido.'], 400);
@@ -358,6 +371,16 @@ final class HS_Comentarios_Botao_V2 {
 	public function rota_pagina_comentarios() {
 		if (!(int) get_query_var('hs_comentarios_page')) {
 			return;
+		}
+
+		if (!defined('DONOTCACHEPAGE')) {
+			define('DONOTCACHEPAGE', true);
+		}
+		if (!defined('DONOTCACHEOBJECT')) {
+			define('DONOTCACHEOBJECT', true);
+		}
+		if (!defined('DONOTCACHEDB')) {
+			define('DONOTCACHEDB', true);
 		}
 
 		$post_id = absint(get_query_var('post_id'));
